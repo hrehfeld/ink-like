@@ -9,11 +9,42 @@ QSizePolicy = W.QSizePolicy
 class GameWindow(W.QWidget):
     def __init__(self, parent=None):
         super(type(self), self).__init__(parent)
+        self.setWindowTitle("Ink-like")
 
-        self.setWindowTitle("Game")
+        text = TextWidget()
+        self.text = text
+        actions = ActionsWidget()
+        self.actions = actions
+
+        splitter = W.QSplitter(QtCore.Qt.Horizontal)
+
+        splitter.addWidget(text)
+        splitter.addWidget(actions)
+        for i in range(splitter.count()):
+            splitter.setCollapsible(i, False)
+        splitter.setSizes([10, 300])
+        splitter.setStretchFactor(0, 1)
+        splitter.setStretchFactor(1, 0)
+        
+
         layout = W.QHBoxLayout(self)
+        layout.addWidget(splitter)
         layout.setStretch(0, 1)
 
+        self.setLayout(layout)
+
+    def say(self, name, text):
+        self.text.insertHtml('<b>{name}:</b> {text}'.format(name=name, text=text))
+        self.text.append('\n')
+        
+    def describe(self, text):
+        self.text.insertHtml(text)
+        self.text.append('\n')
+
+    def set_actions(self, actions):
+        self.actions.set_actions(actions)
+        
+    
 
 class FlowLayout(W.QLayout):
     def __init__(self):
@@ -165,6 +196,15 @@ class ActionsWidget(W.QWidget):
         print(self.content.minimumSizeHint())
         return self.content.minimumSizeHint()
 
+
+    def set_actions(self, actions):
+        l = self.content.layout()
+        for i in range(l.count()):
+            l.takeAt(i)
+
+        for topic, label, f in actions:
+            self.add_action(topic, label, f)
+
 class TextWidget(W.QTextEdit):
     def __init__(self, parent=None):
         super(type(self), self).__init__(parent)
@@ -172,6 +212,7 @@ class TextWidget(W.QTextEdit):
 
     def minimumSizeHint(self):
         return QtCore.QSize(200, 200)
+
 
 class SizeRespectingScrollArea(W.QScrollArea):
     def minimumSizeHint(self):
@@ -184,6 +225,7 @@ class SizeRespectingScrollArea(W.QScrollArea):
 
     def maximumSize(self):
         return self.widget().minimumSize()
+
 
 def with_scrollarea(content, parent=None, resizable=False):
     a = SizeRespectingScrollArea(parent)
@@ -198,35 +240,25 @@ def main():
     app = W.QApplication()
 
     gamew = GameWindow()
+    gamew.show()
 
-    splitter = W.QSplitter(QtCore.Qt.Horizontal)
-    gamew.layout().addWidget(splitter)
 
-    text = TextWidget()
-
-    splitter.addWidget(text)
-    actions = ActionsWidget()
-    splitter.addWidget(actions)
-    #splitter.addWidget(actions)
-
-    for i in range(splitter.count()):
-        splitter.setCollapsible(i, False)
-    splitter.setSizes([10, 300])
-    splitter.setStretchFactor(0, 1)
-    splitter.setStretchFactor(1, 0)
+    def loop():
+        pass
 
     for i in range(50):
-        text.insertHtml('<b>Rachel:</b> This is an owl.')
-        text.append('\n')
-    text.insertHtml("<b>Deckard:</b> I'm not here about the owl.")
+        gamew.say('Rachel', 'This is an owl.')
+    gamew.say('Deckard', "I'm not here about the owl.")
 
+
+    actions = []
 
     for i in range(7):
-        actions.add_action('World', 'Look Around' + str(i), lambda *args: print(args))
+        actions.append(('World', 'Look Around ' + str(i), loop))
     for i in range(4):
-        actions.add_action('People', 'Talk to' + str(i), lambda *args: print(args))
+        actions.append(('People', 'Talk to ' + str(i), loop))
 
-    gamew.show()
+    gamew.set_actions(actions)
 
     sys.exit(app.exec_())
 

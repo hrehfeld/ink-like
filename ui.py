@@ -2,6 +2,8 @@ from PySide2 import QtCore, QtGui, QtWidgets as W
 from PySide2.QtCore import Qt
 import sys
 import collections
+import time
+import random
 
 QSizePolicy = W.QSizePolicy
 
@@ -39,6 +41,10 @@ class GameWindow(W.QWidget):
         
     def describe(self, text):
         self.text.insertHtml(text)
+        self.text.append('\n')
+
+    def act(self, text):
+        self.text.insertHtml('<i>%s</i>' % text)
         self.text.append('\n')
 
     def set_actions(self, actions):
@@ -152,7 +158,6 @@ class ActionsWidget(W.QWidget):
         super(type(self), self).__init__(parent)
 
         l = W.QVBoxLayout()
-        l.addStretch(1)
 
         content = W.QWidget()
         content.setLayout(l)
@@ -170,23 +175,6 @@ class ActionsWidget(W.QWidget):
 
         self.setLayout(l)
 
-        self.topics = {}
-
-
-    def add_action(self, topic, label, f):
-        b = W.QPushButton(label, self)
-        b.clicked.connect(f)
-
-        if not topic in self.topics:
-            g = W.QGroupBox(topic)
-            g.setLayout(FlowLayout())
-            l = self.content.layout()
-            l.insertWidget(l.count() - 1, g)
-            self.topics[topic] = g
-
-        l = self.topics[topic].layout()
-        n = l.count()
-        l.addWidget(b)#, int(n / self.NUM_COLS), n % self.NUM_COLS)
 
     def minimumSize(self):
         print(self.content.minimumSize())
@@ -196,14 +184,29 @@ class ActionsWidget(W.QWidget):
         print(self.content.minimumSizeHint())
         return self.content.minimumSizeHint()
 
-
     def set_actions(self, actions):
+
         l = self.content.layout()
         for i in range(l.count()):
-            l.takeAt(i)
+            l.takeAt(0)
+
+        self.update()
+
+        topics = dict(sorted([(topic, None) for topic, label, f in actions]))
+        for topic in topics:
+            g = W.QGroupBox(topic)
+            g.setLayout(FlowLayout())
+            l = self.content.layout()
+            l.addWidget(g)
+            topics[topic] = g.layout()
 
         for topic, label, f in actions:
-            self.add_action(topic, label, f)
+            b = W.QPushButton(label, self)
+            b.clicked.connect(f)
+            topics[topic].addWidget(b)
+
+        l.addStretch(1)
+
 
 class TextWidget(W.QTextEdit):
     def __init__(self, parent=None):
@@ -236,29 +239,145 @@ def with_scrollarea(content, parent=None, resizable=False):
     return a
 
 
+class State:
+    def __init__(self):
+        self.state = collections.defaultdict(State)
+
+    def __getattr__(self, k):
+        #if k == 'state':
+        #    return super(type(self), self).__getattr__(k)
+        return self.state[k]
+
+    def __setattr__(self, k, v):
+        if k == 'state':
+            super(type(self), self).__setattr__(k, v)
+        else:
+            self.state[k] = v
+
+    def __contains__(self, k):
+        return k in self.state
+    
+
 def main():
     app = W.QApplication()
 
     gamew = GameWindow()
     gamew.show()
 
+    describe = gamew.describe
+    say = gamew.say
+    act = gamew.act
+    def delay():
+        # FIXME force rendering
+        gamew.show()
+        time.sleep(0.125)
 
-    def loop():
-        pass
+    LOCATION_HALL = 0
 
-    for i in range(50):
-        gamew.say('Rachel', 'This is an owl.')
-    gamew.say('Deckard', "I'm not here about the owl.")
-
-
+    state = State()
+    state.time = 0
     actions = []
 
-    for i in range(7):
-        actions.append(('World', 'Look Around ' + str(i), loop))
-    for i in range(4):
-        actions.append(('People', 'Talk to ' + str(i), loop))
+    def loop():
+        action_buttons = []
 
-    gamew.set_actions(actions)
+        execute = []
+        for predicate, labels, action in actions:
+            if predicate():
+                if labels is None:
+                    execute.append(action)
+                else:
+                    action_buttons.append((*labels(), action))
+        random.shuffle(execute)
+        for action in execute:
+            action()
+
+        gamew.set_actions(action_buttons)
+        state.time += 1
+
+
+
+
+    state.location = LOCATION_HALL
+    state.location_enter_time = 0
+    state.actors = {LOCATION_HALL: []}
+
+    ACTOR_OWL = 0
+    ACTOR_RACHEL = 1
+
+    def actor_is_present(actor):
+        return actor in state.actors[state.location]
+
+    def actor_make_present(actor):
+        state.actors[state.location].append(actor)
+
+    def location_duration():
+        return state.time - state.location_enter_time
+
+    def maybe(p=0.5):
+        def roll():
+            return p > random.uniform(0, 1)
+        return roll
+
+
+    def at_first(loc, p=0.5, factor=0.9):
+        if 'act' in loc:
+            return loc.act()
+        def act():
+            nonlocal p
+            print('using at first', p)
+            r = maybe(p)()
+            p *= factor
+            return r
+        print('adding at first')
+        loc.act = act
+        
+
+    def wait():
+        act("You slowly let your eyes wander around the room.")
+        loop()
+    actions.append(((lambda: True), lambda: ('World', 'Wait'), wait))
+
+    class Hall:
+        @staticmethod
+        def look_around():
+            gamew.describe("The hall is vast and largely empty. At the far end there's a desk.")
+            state.hall.seen = True
+            loop()
+
+        class Desk:
+            @staticmethod
+            def describe_desk():
+                if not state.hall.desk.seen:
+                    act("Carefully, you approach the desk.")
+                    delay()
+                describe("The desk is surprisingly large and made of shiny, expensive wood. Somehow, you're afraid to touch it.")
+                describe("A strange metal thing is standing on the desk, which you can only describe as a mixture between a candle holder and a weird sculpture.")
+                state.hall.desk.seen = True
+                loop()
+
+    state.hall.seen = False
+    state.hall.desk.seen = False
+    actions.append(((lambda: state.location == LOCATION_HALL and not state.hall.seen), lambda: ('World', 'Look Around'), Hall.look_around))
+    actions.append(((lambda: state.location == LOCATION_HALL and state.hall.seen and not state.hall.desk.seen), lambda: ('World', 'Take a look at the Desk'), Hall.Desk.describe_desk))
+
+    def hall_owl_intro():
+        act("Suddenly, you hear a flapping noise from the dark. You quickly turn around, just in time to see an owl fly towards you. You freeze for a moment, wondering how to defend against a wild animal.")
+        delay()
+        act("You can't suppress a relieved sigh as the owl dashes past you and lands on the strange object on the desk, which turns out to be an owl seat.")
+        actor_make_present(ACTOR_OWL)
+    actions.append(((lambda: state.location == LOCATION_HALL and location_duration() > 2 and state.hall.desk.seen and not actor_is_present(ACTOR_OWL) and maybe(0.35)), None, hall_owl_intro))
+
+    def hall_owl_look():
+        act("The owl looks at you, somehow questioning your presence here.")
+    actions.append(((lambda: state.location == LOCATION_HALL and actor_is_present(ACTOR_OWL) and at_first(state.owl.seen), None, hall_owl_look)))
+    
+    loop()
+
+    #     for i in range(50):
+    #     gamew.say('Rachel', 'This is an owl.')
+    # gamew.say('Deckard', "I'm not here about the owl.")
+
 
     sys.exit(app.exec_())
 

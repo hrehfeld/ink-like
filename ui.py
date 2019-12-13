@@ -226,14 +226,14 @@ class GameWindow(W.QWidget):
         self.text.append('\n')
         self.text.moveCursor(QtGui.QTextCursor.MoveOperation.End)
 
-    def say(self, name, text):
-        self.add_paragraph('<b>{name}:</b> {text}'.format(name=name, text=text))
+    def say(self, name, text, color='#000'):
+        self.add_paragraph('<b style="color: {color}">{name}:</b> {text}'.format(name=name, text=text, color=color))
         
-    def describe(self, text):
-        self.add_paragraph(text)
+    def describe(self, text, color='#000'):
+        self.add_paragraph('<span style="color: %s">' % color + text + '</span>')
 
-    def act(self, text):
-        self.add_paragraph('<i>%s</i>' % text)
+    def act(self, text, color='#000'):
+        self.add_paragraph('<i style="color: {color}">{text}</i>'.format(text=text, color=color))
 
     def set_actions(self, actions):
         self.actions.set_actions(actions)
@@ -302,18 +302,39 @@ def main():
     def duration(since_time):
         return state.time - since_time
 
+
+
     state.location = LOCATION_HALL
     state.location_enter_time = 0
     state.actors = {LOCATION_HALL: []}
-
-    ACTOR_OWL = 0
-    ACTOR_RACHEL = 1
 
     def actor_is_present(actor):
         return actor in state.actors[state.location]
 
     def actor_make_present(actor):
         state.actors[state.location].append(actor)
+
+    class Actor:
+        def __init__(self, name, color):
+            self.name = name
+            self.color = color
+
+        def act(self, text):
+            act(text, self.color)
+
+        def say(self, text):
+            say(self.name, text, self.color)
+
+        def is_present(self):
+            return actor_is_present(self)
+
+        def enter(self):
+            return actor_make_present(self)
+
+    actor_self = Actor('Me', '#999')
+    actor_owl = Actor('Owl', '#750')
+    #actor_rachel = Actor('Rachel', '#900')
+
 
     def location_duration():
         return duration(state.location_enter_time)
@@ -337,14 +358,14 @@ def main():
         
 
     def wait():
-        act("You slowly let your eyes wander around the room.")
+        actor_self.act("You slowly let your eyes wander around the room.")
         loop()
     actions.append(((lambda: True), lambda: ('World', 'Wait'), wait))
 
     class Hall:
         @staticmethod
         def look_around():
-            gamew.describe("The hall is vast and largely empty. At the far end there's a desk.")
+            describe("The hall is vast and largely empty. At the far end there's a desk.")
             state.hall.seen = True
             loop()
 
@@ -352,7 +373,7 @@ def main():
             @staticmethod
             def describe_desk():
                 if not state.hall.desk.seen:
-                    act("Carefully, you approach the desk.")
+                    actor_self.act("Carefully, you approach the desk.")
                     delay()
                 describe("The desk is surprisingly large and made of shiny, expensive wood. Somehow, you're afraid to touch it.")
                 describe("A strange metal thing is standing on the desk, which you can only describe as a mixture between a candle holder and a weird sculpture.")
@@ -370,27 +391,28 @@ def main():
                     Hall.Desk.describe_desk))
 
     def hall_owl_intro():
-        act("Suddenly, you hear a flapping noise from the dark. You quickly turn around, just in time to see an owl fly towards you. You freeze for a moment, wondering how to defend against a wild animal.")
+        actor_owl.act("Suddenly, you hear a flapping noise from the dark!")
+        actor_owl.act("You quickly turn around, just in time to see an owl fly towards you. You freeze for a moment, wondering how to defend against a wild animal.")
         delay()
-        act("You can't suppress a relieved sigh as the owl dashes past you and lands on the strange object on the desk, which turns out to be an owl seat.")
-        actor_make_present(ACTOR_OWL)
-    actions.append(((lambda: inside_hall() and location_duration() > 2 and state.hall.desk.seen and not actor_is_present(ACTOR_OWL) and maybe(0.45)), None, hall_owl_intro))
+        actor_owl.act("You can't suppress a relieved sigh as the owl dashes past you and lands on the strange object on the desk, which turns out to be an owl seat.")
+        actor_make_present(actor_owl)
+    actions.append(((lambda: inside_hall() and location_duration() > 2 and state.hall.desk.seen and not actor_owl.is_present() and maybe(0.45)), None, hall_owl_intro))
 
     state.owl.look.last = 0
     def hall_owl_look():
         if inside_hall():
-            act("The owl looks at you, somehow questioning your presence here.")
+            actor_owl.act("The owl looks at you, somehow questioning your presence here.")
         else:
-            act("The owl looks at you sceptically.")
+            actor_owl.act("The owl looks at you sceptically.")
         state.owl.look.last = state.time
-    actions.append(((lambda: actor_is_present(ACTOR_OWL) and at_first(state.owl.look, min=0.1) and duration(state.owl.look.last) > 0, None, hall_owl_look)))
+    actions.append(((lambda: actor_owl.is_present() and at_first(state.owl.look, min=0.1) and duration(state.owl.look.last) > 0, None, hall_owl_look)))
     
     def hall_owl_inspect():
-        act("Trying not to disturb the owl, you take a look at it. It is an owl of impressive size, with large, round eyes, brown and white feathers. It sits on the metal bar you saw on the desk earlier.")
-        act("The owl stares back at you, undisturbed by your inspection.")
+        actor_self.act("Trying not to disturb the owl, you take a look at it. It is an owl of impressive size, with large, round eyes, brown and white feathers. It sits on the metal bar you saw on the desk earlier.")
+        actor_owl.act("The owl stares back at you, undisturbed by your inspection.")
         state.owl.look.last = state.time
         loop()
-    actions.append(((lambda: actor_is_present(ACTOR_OWL), lambda: ('World', 'Take a peek at the owl.'), hall_owl_inspect)))
+    actions.append(((lambda: actor_owl.is_present(), lambda: ('World', 'Take a peek at the owl.'), hall_owl_inspect)))
 
 
     # END world

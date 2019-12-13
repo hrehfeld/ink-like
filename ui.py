@@ -214,11 +214,9 @@ class TextWidget(W.QTextEdit):
 
 class SizeRespectingScrollArea(W.QScrollArea):
     def minimumSizeHint(self):
-        print('minimumSizeHint', self.widget().minimumSizeHint())
         return self.widget().minimumSizeHint()
 
     def minimumSize(self):
-        print('minimumSize', self.widget().minimumSize())
         return self.widget().minimumSize()
 
     def maximumSize(self):

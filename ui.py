@@ -286,16 +286,16 @@ def main():
     def loop():
         action_buttons = []
 
-        execute = []
+        # messages first
         for predicate, labels, action in actions:
-            if predicate():
-                if labels is None:
-                    execute.append(action)
-                else:
-                    action_buttons.append((*labels(), action))
-        random.shuffle(execute)
-        for action in execute:
-            action()
+            if labels is None and predicate():
+                delay()
+                action()
+
+        # then generate action list
+        for predicate, labels, action in actions:
+            if labels is not None and predicate():
+                action_buttons.append((*labels(), action))
 
         gamew.set_actions(action_buttons)
         state.time += 1

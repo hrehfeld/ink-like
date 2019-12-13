@@ -377,16 +377,19 @@ def main():
         actor_make_present(ACTOR_OWL)
     actions.append(((lambda: inside_hall() and location_duration() > 2 and state.hall.desk.seen and not actor_is_present(ACTOR_OWL) and maybe(0.45)), None, hall_owl_intro))
 
+    state.owl.look.last = 0
     def hall_owl_look():
         if inside_hall():
             act("The owl looks at you, somehow questioning your presence here.")
         else:
             act("The owl looks at you sceptically.")
-    actions.append(((lambda: actor_is_present(ACTOR_OWL) and at_first(state.owl.look, min=0.1), None, hall_owl_look)))
+        state.owl.look.last = state.time
+    actions.append(((lambda: actor_is_present(ACTOR_OWL) and at_first(state.owl.look, min=0.1) and duration(state.owl.look.last) > 0, None, hall_owl_look)))
     
     def hall_owl_inspect():
         act("Trying not to disturb the owl, you take a look at it. It is an owl of impressive size, with large, round eyes, brown and white feathers. It sits on the metal bar you saw on the desk earlier.")
         act("The owl stares back at you, undisturbed by your inspection.")
+        state.owl.look.last = state.time
         loop()
     actions.append(((lambda: actor_is_present(ACTOR_OWL), lambda: ('World', 'Take a peek at the owl.'), hall_owl_inspect)))
 

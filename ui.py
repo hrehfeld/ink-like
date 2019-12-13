@@ -8,6 +8,15 @@ import random
 QSizePolicy = W.QSizePolicy
 
 
+def children_widgets(w):
+    l = w.layout()
+    for i in range(l.count()):
+        item_widget = l.itemAt(i).widget()
+
+        if item_widget:
+            yield item_widget
+    
+
 class FlowLayout(W.QLayout):
     def __init__(self):
         super(type(self), self).__init__()
@@ -184,6 +193,13 @@ class ActionsWidget(W.QWidget):
 
         l.addStretch(1)
 
+    def setEnabled(self, enabled):
+        for group in children_widgets(self.content):
+            for button in children_widgets(group):
+                if isinstance(button, W.QPushButton):
+                    button.setEnabled(enabled)
+                
+
 
 class TextWidget(W.QTextEdit):
     def __init__(self, parent=None):
@@ -237,6 +253,9 @@ class GameWindow(W.QWidget):
 
     def set_actions(self, actions):
         self.actions.set_actions(actions)
+
+    def setEnabled(self, enabled):
+        return self.actions.setEnabled(enabled)
         
     
 class State:
@@ -270,8 +289,10 @@ def main():
     say = gamew.say
     act = gamew.act
     def delay():
+        gamew.setEnabled(False)
         gamew.repaint()
         time.sleep(0.5)
+        gamew.setEnabled(True)
 
     LOCATION_HALL = 0
 

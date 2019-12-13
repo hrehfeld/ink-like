@@ -430,6 +430,7 @@ def main():
     
     def hall_owl_inspect():
         actor_self.act("Trying not to disturb the owl, you take a look at it. It is an owl of impressive size, with large, round eyes, brown and white feathers. It sits on the metal bar you saw on the desk earlier.")
+        delay()
         actor_owl.act("The owl stares back at you, undisturbed by your inspection.")
         state.owl.look.last = state.time
         loop()

@@ -269,9 +269,8 @@ def main():
     say = gamew.say
     act = gamew.act
     def delay():
-        # FIXME force rendering
-        gamew.show()
-        time.sleep(0.125)
+        gamew.repaint()
+        time.sleep(0.25)
 
     LOCATION_HALL = 0
 

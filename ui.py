@@ -300,8 +300,8 @@ def main():
         gamew.set_actions(action_buttons)
         state.time += 1
 
-
-
+    def duration(since_time):
+        return state.time - since_time
 
     state.location = LOCATION_HALL
     state.location_enter_time = 0
@@ -317,7 +317,7 @@ def main():
         state.actors[state.location].append(actor)
 
     def location_duration():
-        return state.time - state.location_enter_time
+        return duration(state.location_enter_time)
 
     def maybe(p=0.5):
         return p > random.uniform(0, 1)

@@ -34,18 +34,20 @@ class GameWindow(W.QWidget):
         layout.setStretch(0, 1)
 
         self.setLayout(layout)
-
-    def say(self, name, text):
-        self.text.insertHtml('<b>{name}:</b> {text}'.format(name=name, text=text))
-        self.text.append('\n')
         
-    def describe(self, text):
+    def add_paragraph(self, text):
         self.text.insertHtml(text)
         self.text.append('\n')
+        self.text.moveCursor(QtGui.QTextCursor.MoveOperation.End)
+
+    def say(self, name, text):
+        self.add_paragraph('<b>{name}:</b> {text}'.format(name=name, text=text))
+        
+    def describe(self, text):
+        self.add_paragraph(text)
 
     def act(self, text):
-        self.text.insertHtml('<i>%s</i>' % text)
-        self.text.append('\n')
+        self.add_paragraph('<i>%s</i>' % text)
 
     def set_actions(self, actions):
         self.actions.set_actions(actions)
@@ -181,19 +183,21 @@ class ActionsWidget(W.QWidget):
 
     def set_actions(self, actions):
         l = self.content.layout()
-        print(l.count())
         while l.count():
-            i = l.itemAt(0)
-            l.removeItem(i)
-            del i
+            item_widget = l.takeAt(0).widget()
+            
+            # need to unset parent!
+            # not all items are widgets
+            if item_widget:
+                item_widget.setParent(None)
 
         topics = dict(sorted([(topic, None) for topic, label, f in actions]))
-        if 0:
+        if 1:
             for topic in topics:
                 print('adding topic', topic)
                 g = W.QGroupBox(topic)
-                #g.setLayout(FlowLayout())
-                g.setLayout(W.QVBoxLayout())
+                g.setLayout(FlowLayout())
+                #g.setLayout(W.QVBoxLayout())
                 l = self.content.layout()
                 l.addWidget(g)
                 topics[topic] = g.layout()
@@ -201,8 +205,8 @@ class ActionsWidget(W.QWidget):
         for topic, label, f in actions:
             b = W.QPushButton(label, self)
             b.clicked.connect(f)
-            l.addWidget(b)
-            #topics[topic].addWidget(b)
+            #l.addWidget(b)
+            topics[topic].addWidget(b)
 
         l.addStretch(1)
 

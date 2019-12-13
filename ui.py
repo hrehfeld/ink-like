@@ -174,11 +174,9 @@ class ActionsWidget(W.QWidget):
 
 
     def minimumSize(self):
-        print(self.content.minimumSize())
         return self.content.minimumSize()
 
     def minimumSizeHint(self):
-        print(self.content.minimumSizeHint())
         return self.content.minimumSizeHint()
 
     def set_actions(self, actions):

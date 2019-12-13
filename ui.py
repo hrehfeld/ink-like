@@ -352,8 +352,8 @@ def main():
         def enter(self):
             return actor_make_present(self)
 
-    actor_self = Actor('Me', '#999')
-    actor_owl = Actor('Owl', '#750')
+    actor_self = Actor('Deckard', '#444')
+    actor_owl = Actor('Owl', '#740')
     #actor_rachel = Actor('Rachel', '#900')
 
 

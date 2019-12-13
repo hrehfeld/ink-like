@@ -276,6 +276,9 @@ def main():
 
     LOCATION_HALL = 0
 
+    def at_location(location):
+        return state.location == location
+
     state = State()
     state.time = 0
     actions = []
@@ -361,10 +364,13 @@ def main():
                 state.hall.desk.seen = True
                 loop()
 
+    def inside_hall():
+        return at_location(LOCATION_HALL)
+
     state.hall.seen = False
     state.hall.desk.seen = False
-    actions.append(((lambda: state.location == LOCATION_HALL and not state.hall.seen), lambda: ('World', 'Look Around'), Hall.look_around))
-    actions.append(((lambda: state.location == LOCATION_HALL and state.hall.seen),
+    actions.append(((lambda: inside_hall() and not state.hall.seen), lambda: ('World', 'Look Around'), Hall.look_around))
+    actions.append(((lambda: inside_hall() and state.hall.seen),
                     lambda: ('World', 'Take a look at the Desk' if not state.hall.desk.seen else 'Maybe you missed something on the desk?'),
                     Hall.Desk.describe_desk))
 
@@ -373,11 +379,11 @@ def main():
         delay()
         act("You can't suppress a relieved sigh as the owl dashes past you and lands on the strange object on the desk, which turns out to be an owl seat.")
         actor_make_present(ACTOR_OWL)
-    actions.append(((lambda: state.location == LOCATION_HALL and location_duration() > 2 and state.hall.desk.seen and not actor_is_present(ACTOR_OWL) and maybe(0.35)), None, hall_owl_intro))
+    actions.append(((lambda: inside_hall() and location_duration() > 2 and state.hall.desk.seen and not actor_is_present(ACTOR_OWL) and maybe(0.35)), None, hall_owl_intro))
 
     def hall_owl_look():
         act("The owl looks at you, somehow questioning your presence here.")
-    actions.append(((lambda: state.location == LOCATION_HALL and actor_is_present(ACTOR_OWL) and at_first(state.owl.seen), None, hall_owl_look)))
+    actions.append(((lambda: inside_hall() and actor_is_present(ACTOR_OWL) and at_first(state.owl.seen), None, hall_owl_look)))
     
     loop()
 

@@ -272,7 +272,7 @@ def main():
     act = gamew.act
     def delay():
         gamew.repaint()
-        time.sleep(0.25)
+        time.sleep(0.5)
 
     LOCATION_HALL = 0
 
@@ -322,7 +322,7 @@ def main():
     def maybe(p=0.5):
         return p > random.uniform(0, 1)
 
-    def at_first(loc, p=0.5, factor=0.9):
+    def at_first(loc, p=0.5, factor=0.9, min=0):
         if 'act' in loc:
             return loc.act()
         def act():
@@ -330,8 +330,8 @@ def main():
             print('using at first', p)
             r = maybe(p)
             p *= factor
-            if p <= EPSILON:
-                p = 0
+            if p < min:
+                p = min
             return r
         print('adding at first')
         loc.act = act
@@ -378,8 +378,20 @@ def main():
     actions.append(((lambda: inside_hall() and location_duration() > 2 and state.hall.desk.seen and not actor_is_present(ACTOR_OWL) and maybe(0.35)), None, hall_owl_intro))
 
     def hall_owl_look():
-        act("The owl looks at you, somehow questioning your presence here.")
-    actions.append(((lambda: inside_hall() and actor_is_present(ACTOR_OWL) and at_first(state.owl.seen), None, hall_owl_look)))
+        if inside_hall():
+            act("The owl looks at you, somehow questioning your presence here.")
+        else:
+            act("The owl looks at you sceptically.")
+    actions.append(((lambda: actor_is_present(ACTOR_OWL) and at_first(state.owl.look, min=0.1), None, hall_owl_look)))
+    
+    def hall_owl_inspect():
+        act("Trying not to disturb the owl, you take a look at it. It is an owl of impressive size, with large, round eyes, brown and white feathers. It sits on the metal bar you saw on the desk earlier.")
+        act("The owl stares back at you, undisturbed by your inspection.")
+        loop()
+    actions.append(((lambda: actor_is_present(ACTOR_OWL), lambda: ('World', 'Take a peek at the owl.'), hall_owl_inspect)))
+
+
+    # END world
     
     loop()
 

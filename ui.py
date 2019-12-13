@@ -357,7 +357,6 @@ def main():
             return actor_make_present(self)
 
     actor_self = Actor('Deckard', '#444')
-    actor_owl = Actor('Owl', '#740')
     #actor_rachel = Actor('Rachel', '#900')
 
 
@@ -415,37 +414,52 @@ def main():
                     lambda: ('World', 'Take a look at the desk' if not state.hall.desk.seen else 'Take another look at the desk'),
                     Hall.Desk.describe_desk))
 
-    def hall_owl_intro():
-        actor_owl.act("Suddenly, you hear a flapping noise from the dark!")
-        actor_owl.act("You quickly turn around, just in time to see an owl fly towards you. You freeze for a moment, wondering how to defend against a wild animal.")
-        delay()
-        actor_owl.act("You can't suppress a relieved sigh as the owl dashes past you and lands on the strange object on the desk, which turns out to be an owl seat.")
-        actor_make_present(actor_owl)
-    actions.append(((lambda: inside_hall() and location_duration() > 2 and state.hall.desk.seen and not actor_owl.is_present() and maybe(0.45)), None, hall_owl_intro))
 
-    state.owl.look.last = 0
-    def hall_owl_look():
-        if inside_hall():
-            actor_owl.act("The owl looks at you, somehow questioning your presence here.")
-        else:
-            actor_owl.act("The owl looks at you sceptically.")
-        state.owl.look.last = state.time
-    actions.append(((lambda: actor_owl.is_present() and at_first(state.owl.look, min=0.1) and duration(state.owl.look.last) > 0, None, hall_owl_look)))
-    
-    def hall_owl_inspect():
-        actor_self.act("Trying not to disturb the owl, you take a look at it. It is an owl of impressive size, with large, round eyes, brown and white feathers. It sits on the metal bar you saw on the desk earlier.")
-        delay()
-        actor_owl.act("The owl stares back at you, undisturbed by your inspection.")
-        state.owl.look.last = state.time
-        loop()
-    actions.append(((lambda: actor_owl.is_present(), lambda: ('World', 'Take a peek at the owl.'), hall_owl_inspect)))
+    class Owl(Actor):
+        def __init__(self):
+            Actor.__init__(self, 'Owl', '#740')
+            self.looked_time = 0
 
-    def hall_owl_speak_to():
-        actor_self.say("You're a good little owl, aren't you..?")
-        loop()
-        actor_owl.act("The owl seems unimpressed.")
-        state.owl.look.last = state.time
-    actions.append(((lambda: actor_owl.is_present(), lambda: ('World', 'Comfort the owl.'), hall_owl_speak_to)))
+            add_action(self.intro_cond, None, self.intro)
+            add_action(self.look_cond, None, self.look)
+            add_action(lambda: self.is_present(), lambda: ('World', 'Take a peek at the owl.'), self.inspect)
+            add_action(lambda: self.is_present(), lambda: ('World', 'Comfort the owl.'), self.speak_to)
+            
+
+        def intro(self):
+            self.act("Suddenly, you hear a flapping noise from the dark!")
+            self.act("You quickly turn around, just in time to see an owl fly towards you. You freeze for a moment, wondering how to defend against a wild animal.")
+            delay()
+            self.act("You can't suppress a relieved sigh as the owl dashes past you and lands on the strange object on the desk, which turns out to be an owl seat.")
+            actor_make_present(self)
+
+        def intro_cond(self):
+            return inside_hall() and location_duration() > 2 and state.hall.desk.seen and not self.is_present() and maybe(0.45)            
+
+        def look(self):
+            if inside_hall():
+                self.act("The owl looks at you, somehow questioning your presence here.")
+            else:
+                self.act("The owl looks at you sceptically.")
+            self.looked_time = state.time
+
+        def look_cond(self):
+            return self.is_present() and at_first(state.owl.look, min=0.1) and duration(state.owl.look.last) > 0
+
+        def inspect(self):
+            actor_self.act("Trying not to disturb the owl, you take a look at it. It is an owl of impressive size, with large, round eyes, brown and white feathers. It sits on the metal bar you saw on the desk earlier.")
+            delay()
+            self.act("The owl stares back at you, undisturbed by your inspection.")
+            self.looked_time = state.time
+            loop()
+        
+        def speak_to(self):
+            actor_self.say("You're a good little owl, aren't you..?")
+            loop()
+            self.act("The owl seems unimpressed.")
+            self.looked_time = state.time
+            loop()
+    actor_owl = Owl()
 
     # END world
     

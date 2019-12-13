@@ -268,8 +268,9 @@ class State:
         return self.state[k]
 
     def __setattr__(self, k, v):
-        if k == 'state':
-            super(type(self), self).__setattr__(k, v)
+        sup = super(type(self), self)
+        if k in ('state',):
+            sup.__setattr__(k, v)
         else:
             self.state[k] = v
 

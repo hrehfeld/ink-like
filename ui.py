@@ -353,7 +353,9 @@ def main():
     state.hall.seen = False
     state.hall.desk.seen = False
     actions.append(((lambda: state.location == LOCATION_HALL and not state.hall.seen), lambda: ('World', 'Look Around'), Hall.look_around))
-    actions.append(((lambda: state.location == LOCATION_HALL and state.hall.seen and not state.hall.desk.seen), lambda: ('World', 'Take a look at the Desk'), Hall.Desk.describe_desk))
+    actions.append(((lambda: state.location == LOCATION_HALL and state.hall.seen),
+                    lambda: ('World', 'Take a look at the Desk' if not state.hall.desk.seen else 'Maybe you missed something on the desk?'),
+                    Hall.Desk.describe_desk))
 
     def hall_owl_intro():
         act("Suddenly, you hear a flapping noise from the dark. You quickly turn around, just in time to see an owl fly towards you. You freeze for a moment, wondering how to defend against a wild animal.")

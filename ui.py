@@ -106,51 +106,26 @@ class FlowLayout(W.QLayout):
         return parent.spacing()
 
 
-class GameWindow(W.QWidget):
-    def __init__(self, parent=None):
-        super(type(self), self).__init__(parent)
-        self.setWindowTitle("Ink-like")
+class SizeRespectingScrollArea(W.QScrollArea):
+    def minimumSizeHint(self):
+        return self.widget().minimumSizeHint()
 
-        text = TextWidget()
-        self.text = text
-        actions = ActionsWidget()
-        self.actions = actions
+    def minimumSize(self):
+        return self.widget().minimumSize()
 
-        splitter = W.QSplitter(QtCore.Qt.Horizontal)
+    def maximumSize(self):
+        return self.widget().minimumSize()
 
-        splitter.addWidget(text)
-        splitter.addWidget(actions)
-        for i in range(splitter.count()):
-            splitter.setCollapsible(i, False)
-        splitter.setSizes([10, 300])
-        splitter.setStretchFactor(0, 1)
-        splitter.setStretchFactor(1, 0)
-        
 
-        layout = W.QHBoxLayout(self)
-        layout.addWidget(splitter)
-        layout.setStretch(0, 1)
+def with_scrollarea(content, parent=None, resizable=False):
+    a = SizeRespectingScrollArea(parent)
+    a.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+    a.horizontalScrollBar().setEnabled(False)
+    a.setWidgetResizable(resizable)
+    a.setWidget(content)
+    return a
 
-        self.setLayout(layout)
-        
-    def add_paragraph(self, text):
-        self.text.insertHtml(text)
-        self.text.append('\n')
-        self.text.moveCursor(QtGui.QTextCursor.MoveOperation.End)
 
-    def say(self, name, text):
-        self.add_paragraph('<b>{name}:</b> {text}'.format(name=name, text=text))
-        
-    def describe(self, text):
-        self.add_paragraph(text)
-
-    def act(self, text):
-        self.add_paragraph('<i>%s</i>' % text)
-
-    def set_actions(self, actions):
-        self.actions.set_actions(actions)
-        
-    
 class ActionsWidget(W.QWidget):
     def __init__(self, parent=None):
         super(type(self), self).__init__(parent)
@@ -219,26 +194,51 @@ class TextWidget(W.QTextEdit):
         return QtCore.QSize(200, 200)
 
 
-class SizeRespectingScrollArea(W.QScrollArea):
-    def minimumSizeHint(self):
-        return self.widget().minimumSizeHint()
+class GameWindow(W.QWidget):
+    def __init__(self, parent=None):
+        super(type(self), self).__init__(parent)
+        self.setWindowTitle("Ink-like")
 
-    def minimumSize(self):
-        return self.widget().minimumSize()
+        text = TextWidget()
+        self.text = text
+        actions = ActionsWidget()
+        self.actions = actions
 
-    def maximumSize(self):
-        return self.widget().minimumSize()
+        splitter = W.QSplitter(QtCore.Qt.Horizontal)
 
+        splitter.addWidget(text)
+        splitter.addWidget(actions)
+        for i in range(splitter.count()):
+            splitter.setCollapsible(i, False)
+        splitter.setSizes([10, 300])
+        splitter.setStretchFactor(0, 1)
+        splitter.setStretchFactor(1, 0)
+        
 
-def with_scrollarea(content, parent=None, resizable=False):
-    a = SizeRespectingScrollArea(parent)
-    a.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-    a.horizontalScrollBar().setEnabled(False)
-    a.setWidgetResizable(resizable)
-    a.setWidget(content)
-    return a
+        layout = W.QHBoxLayout(self)
+        layout.addWidget(splitter)
+        layout.setStretch(0, 1)
 
+        self.setLayout(layout)
+        
+    def add_paragraph(self, text):
+        self.text.insertHtml(text)
+        self.text.append('\n')
+        self.text.moveCursor(QtGui.QTextCursor.MoveOperation.End)
 
+    def say(self, name, text):
+        self.add_paragraph('<b>{name}:</b> {text}'.format(name=name, text=text))
+        
+    def describe(self, text):
+        self.add_paragraph(text)
+
+    def act(self, text):
+        self.add_paragraph('<i>%s</i>' % text)
+
+    def set_actions(self, actions):
+        self.actions.set_actions(actions)
+        
+    
 class State:
     def __init__(self):
         self.state = collections.defaultdict(State)

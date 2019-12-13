@@ -367,7 +367,7 @@ def main():
     state.hall.desk.seen = False
     actions.append(((lambda: inside_hall() and not state.hall.seen), lambda: ('World', 'Look Around'), Hall.look_around))
     actions.append(((lambda: inside_hall() and state.hall.seen),
-                    lambda: ('World', 'Take a look at the Desk' if not state.hall.desk.seen else 'Maybe you missed something on the desk?'),
+                    lambda: ('World', 'Take a look at the desk' if not state.hall.desk.seen else 'Take another look at the desk'),
                     Hall.Desk.describe_desk))
 
     def hall_owl_intro():

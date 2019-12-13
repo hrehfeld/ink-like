@@ -151,9 +151,6 @@ class FlowLayout(W.QLayout):
     
 
 class ActionsWidget(W.QWidget):
-    NUM_COLS = 4
-    COL_WIDTH = 50
-
     def __init__(self, parent=None):
         super(type(self), self).__init__(parent)
 

@@ -8,52 +8,6 @@ import random
 QSizePolicy = W.QSizePolicy
 
 
-class GameWindow(W.QWidget):
-    def __init__(self, parent=None):
-        super(type(self), self).__init__(parent)
-        self.setWindowTitle("Ink-like")
-
-        text = TextWidget()
-        self.text = text
-        actions = ActionsWidget()
-        self.actions = actions
-
-        splitter = W.QSplitter(QtCore.Qt.Horizontal)
-
-        splitter.addWidget(text)
-        splitter.addWidget(actions)
-        for i in range(splitter.count()):
-            splitter.setCollapsible(i, False)
-        splitter.setSizes([10, 300])
-        splitter.setStretchFactor(0, 1)
-        splitter.setStretchFactor(1, 0)
-        
-
-        layout = W.QHBoxLayout(self)
-        layout.addWidget(splitter)
-        layout.setStretch(0, 1)
-
-        self.setLayout(layout)
-        
-    def add_paragraph(self, text):
-        self.text.insertHtml(text)
-        self.text.append('\n')
-        self.text.moveCursor(QtGui.QTextCursor.MoveOperation.End)
-
-    def say(self, name, text):
-        self.add_paragraph('<b>{name}:</b> {text}'.format(name=name, text=text))
-        
-    def describe(self, text):
-        self.add_paragraph(text)
-
-    def act(self, text):
-        self.add_paragraph('<i>%s</i>' % text)
-
-    def set_actions(self, actions):
-        self.actions.set_actions(actions)
-        
-    
-
 class FlowLayout(W.QLayout):
     def __init__(self):
         super(type(self), self).__init__()
@@ -150,8 +104,53 @@ class FlowLayout(W.QLayout):
         if parent.isWidgetType():
             return parent.style().pixelMetric(pixel_metric, None, parent)
         return parent.spacing()
-    
 
+
+class GameWindow(W.QWidget):
+    def __init__(self, parent=None):
+        super(type(self), self).__init__(parent)
+        self.setWindowTitle("Ink-like")
+
+        text = TextWidget()
+        self.text = text
+        actions = ActionsWidget()
+        self.actions = actions
+
+        splitter = W.QSplitter(QtCore.Qt.Horizontal)
+
+        splitter.addWidget(text)
+        splitter.addWidget(actions)
+        for i in range(splitter.count()):
+            splitter.setCollapsible(i, False)
+        splitter.setSizes([10, 300])
+        splitter.setStretchFactor(0, 1)
+        splitter.setStretchFactor(1, 0)
+        
+
+        layout = W.QHBoxLayout(self)
+        layout.addWidget(splitter)
+        layout.setStretch(0, 1)
+
+        self.setLayout(layout)
+        
+    def add_paragraph(self, text):
+        self.text.insertHtml(text)
+        self.text.append('\n')
+        self.text.moveCursor(QtGui.QTextCursor.MoveOperation.End)
+
+    def say(self, name, text):
+        self.add_paragraph('<b>{name}:</b> {text}'.format(name=name, text=text))
+        
+    def describe(self, text):
+        self.add_paragraph(text)
+
+    def act(self, text):
+        self.add_paragraph('<i>%s</i>' % text)
+
+    def set_actions(self, actions):
+        self.actions.set_actions(actions)
+        
+    
 class ActionsWidget(W.QWidget):
     def __init__(self, parent=None):
         super(type(self), self).__init__(parent)

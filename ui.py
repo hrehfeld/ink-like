@@ -259,6 +259,8 @@ class State:
         return k in self.state
     
 
+EPSILON = 0.0001
+
 def main():
     app = W.QApplication()
 
@@ -329,6 +331,8 @@ def main():
             print('using at first', p)
             r = probability_check(p)
             p *= factor
+            if p <= EPSILON:
+                p = 0
             return r
         print('adding at first')
         loc.act = act

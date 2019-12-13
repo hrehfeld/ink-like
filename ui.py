@@ -304,6 +304,9 @@ def main():
     state.time = 0
     actions = []
 
+    def add_action(condition, labels, action):
+        actions.append((condition, labels, action))
+
     def loop():
         action_buttons = []
 

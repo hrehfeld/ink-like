@@ -375,7 +375,7 @@ def main():
         delay()
         act("You can't suppress a relieved sigh as the owl dashes past you and lands on the strange object on the desk, which turns out to be an owl seat.")
         actor_make_present(ACTOR_OWL)
-    actions.append(((lambda: inside_hall() and location_duration() > 2 and state.hall.desk.seen and not actor_is_present(ACTOR_OWL) and maybe(0.35)), None, hall_owl_intro))
+    actions.append(((lambda: inside_hall() and location_duration() > 2 and state.hall.desk.seen and not actor_is_present(ACTOR_OWL) and maybe(0.45)), None, hall_owl_intro))
 
     def hall_owl_look():
         if inside_hall():

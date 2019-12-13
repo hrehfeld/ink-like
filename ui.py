@@ -180,25 +180,29 @@ class ActionsWidget(W.QWidget):
         return self.content.minimumSizeHint()
 
     def set_actions(self, actions):
-
         l = self.content.layout()
-        for i in range(l.count()):
-            l.takeAt(0)
-
-        self.update()
+        print(l.count())
+        while l.count():
+            i = l.itemAt(0)
+            l.removeItem(i)
+            del i
 
         topics = dict(sorted([(topic, None) for topic, label, f in actions]))
-        for topic in topics:
-            g = W.QGroupBox(topic)
-            g.setLayout(FlowLayout())
-            l = self.content.layout()
-            l.addWidget(g)
-            topics[topic] = g.layout()
+        if 0:
+            for topic in topics:
+                print('adding topic', topic)
+                g = W.QGroupBox(topic)
+                #g.setLayout(FlowLayout())
+                g.setLayout(W.QVBoxLayout())
+                l = self.content.layout()
+                l.addWidget(g)
+                topics[topic] = g.layout()
 
         for topic, label, f in actions:
             b = W.QPushButton(label, self)
             b.clicked.connect(f)
-            topics[topic].addWidget(b)
+            l.addWidget(b)
+            #topics[topic].addWidget(b)
 
         l.addStretch(1)
 

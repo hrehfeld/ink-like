@@ -319,12 +319,8 @@ def main():
     def location_duration():
         return state.time - state.location_enter_time
 
-    def probability_check(p):
-        return p > random.uniform(0, 1)
-
     def maybe(p=0.5):
-        return lambda: probability_check(p)
-
+        return p > random.uniform(0, 1)
 
     def at_first(loc, p=0.5, factor=0.9):
         if 'act' in loc:
@@ -332,7 +328,7 @@ def main():
         def act():
             nonlocal p
             print('using at first', p)
-            r = probability_check(p)
+            r = maybe(p)
             p *= factor
             if p <= EPSILON:
                 p = 0

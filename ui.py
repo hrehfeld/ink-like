@@ -436,6 +436,12 @@ def main():
         loop()
     actions.append(((lambda: actor_owl.is_present(), lambda: ('World', 'Take a peek at the owl.'), hall_owl_inspect)))
 
+    def hall_owl_speak_to():
+        actor_self.say("You're a good little owl, aren't you..?")
+        loop()
+        actor_owl.act("The owl seems unimpressed.")
+        state.owl.look.last = state.time
+    actions.append(((lambda: actor_owl.is_present(), lambda: ('World', 'Comfort the owl.'), hall_owl_speak_to)))
 
     # END world
     
